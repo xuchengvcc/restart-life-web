@@ -3,7 +3,7 @@ import axios, { AxiosResponse } from 'axios'
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -84,46 +84,53 @@ export const authAPI = {
 // 角色相关API
 export const characterAPI = {
   create: (character: Partial<Character>) =>
-    api.post<ApiResponse<Character>>('/characters', character),
+    api.post<ApiResponse<Character>>('/characters/create', character),
 
   getById: (id: string) =>
-    api.get<ApiResponse<Character>>(`/characters/${id}`),
+    api.get<ApiResponse<Character>>(`/characters/get/${id}`),
 
   getByUser: () =>
-    api.get<ApiResponse<Character[]>>('/characters'),
+    api.get<ApiResponse<Character[]>>('/characters/list'),
 
   update: (id: string, character: Partial<Character>) =>
-    api.put<ApiResponse<Character>>(`/characters/${id}`, character),
+    api.put<ApiResponse<Character>>(`/characters/update/${id}`, character),
 
   delete: (id: string) =>
-    api.delete<ApiResponse>(`/characters/${id}`),
+    api.delete<ApiResponse>(`/characters/delete/${id}`),
 }
 
 // 游戏相关API
 export const gameAPI = {
-  getGameState: (characterId: string) =>
-    api.get<ApiResponse<GameState>>(`/game/${characterId}/state`),
+  startOrResume: () =>
+    api.post<ApiResponse<GameState>>('/game/start-or-resume'),
 
-  getState: (characterId: string) =>
-    api.get<ApiResponse<GameState>>(`/game/${characterId}/state`),
+  startGame: (characterId: string) =>
+    api.post<ApiResponse<GameState>>(`/game/start/${characterId}`),
 
   advanceGame: (characterId: string, request?: GameProgressRequest) =>
-    api.post<ApiResponse<GameState>>(`/game/${characterId}/advance`, request || {}),
+    api.post<ApiResponse<GameState>>(`/game/advance/${characterId}`, request || {}),
 
-  nextTurn: (characterId: string) =>
-    api.post<ApiResponse<GameEvent>>(`/game/${characterId}/next-turn`),
-
-  makeDecision: (characterId: string, decision: GameDecision) =>
-    api.post<ApiResponse<GameState>>(`/game/${characterId}/decision`, decision),
-
-  getHistory: (characterId: string) =>
-    api.get<ApiResponse<GameEvent[]>>(`/game/${characterId}/history`),
+  getGameState: (characterId: string) =>
+    api.get<ApiResponse<GameState>>(`/game/state/${characterId}`),
 
   saveGame: (characterId: string) =>
-    api.post<ApiResponse>(`/game/${characterId}/save`),
+    api.post<ApiResponse>(`/game/save/${characterId}`),
 
   loadGame: (characterId: string) =>
-    api.get<ApiResponse<GameState>>(`/game/${characterId}/load`),
+    api.get<ApiResponse<GameState>>(`/game/load/${characterId}`),
+
+  getHistory: (characterId: string) =>
+    api.get<ApiResponse<GameEvent[]>>(`/game/history/${characterId}`),
+
+  // 兼容旧的API调用
+  getState: (characterId: string) =>
+    api.get<ApiResponse<GameState>>(`/game/state/${characterId}`),
+
+  nextTurn: (characterId: string) =>
+    api.post<ApiResponse<GameEvent>>(`/game/next-turn/${characterId}`),
+
+  makeDecision: (characterId: string, decision: GameDecision) =>
+    api.post<ApiResponse<GameState>>(`/game/decision/${characterId}`, decision),
 }
 
 export default api
