@@ -35,19 +35,16 @@ const { Title, Text } = Typography
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate()
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { user, logout } = useAuthStore()
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading] = useState(false)
   const [editModalVisible, setEditModalVisible] = useState(false)
   const [form] = Form.useForm()
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login')
-      return
-    }
+    // 由于页面已经被ProtectedRoute保护，这里只需要加载用户数据
     loadUserData()
-  }, [isAuthenticated])
+  }, [])
 
   const loadUserData = async () => {
     setLoading(true)
@@ -194,7 +191,7 @@ const ProfilePage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="p-6">
+      <div className="p-6" style={{ paddingTop: '24px' }}>
         <Card>
           <div className="text-center">
             <Title level={3}>请先登录</Title>
@@ -208,7 +205,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto" style={{ paddingTop: '24px' }}>
       <Row gutter={[24, 24]}>
         {/* 用户信息卡片 */}
         <Col xs={24} lg={8}>

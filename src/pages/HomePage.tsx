@@ -14,10 +14,10 @@ const HomePage: React.FC = () => {
         {/* 头部banner */}
         <div className="text-center mb-12">
           <Title level={1} className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            重启人生
+            重启新生
           </Title>
           <Paragraph className="text-xl text-gray-600 mt-4">
-            🎮 一款让你体验无限人生可能的文字模拟游戏
+            🎮 一个让你体验无限人生可能的文字模拟测试
           </Paragraph>
           <Paragraph className="text-lg text-gray-500">
             在不同的时代背景下，体验从1800年到2050年间任意年份的人生轨迹
@@ -44,7 +44,7 @@ const HomePage: React.FC = () => {
             <Card className="h-full text-center hover:shadow-lg transition-shadow">
               <div className="text-4xl mb-4">🎲</div>
               <Title level={4}>智能生成</Title>
-              <Paragraph>AI驱动的游戏引擎，生成合理且富有挑战性的人生事件</Paragraph>
+              <Paragraph>AI驱动，生成合理且富有挑战性的人生事件</Paragraph>
             </Card>
           </Col>
         </Row>

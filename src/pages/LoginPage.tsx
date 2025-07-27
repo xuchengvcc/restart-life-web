@@ -17,8 +17,8 @@ import {
   Tabs,
   Typography
 } from 'antd'
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const { Title, Text } = Typography
 const { TabPane } = Tabs
@@ -37,7 +37,8 @@ interface RegisterForm {
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate()
-  const { login } = useAuthStore()
+  const location = useLocation()
+  const { login, isAuthenticated } = useAuthStore()
   const [loginLoading, setLoginLoading] = useState(false)
   const [registerLoading, setRegisterLoading] = useState(false)
   const [resetLoading, setResetLoading] = useState(false)
@@ -45,6 +46,14 @@ const LoginPage: React.FC = () => {
   const [resetStep, setResetStep] = useState(1) // 1: 输入邮箱, 2: 输入验证码, 3: 设置新密码
   const [resetEmail, setResetEmail] = useState('')
   const [resetToken, setResetToken] = useState('')
+
+  // 如果已经登录，重定向到主页
+  useEffect(() => {
+    if (isAuthenticated) {
+      const from = (location.state as any)?.from?.pathname || '/'
+      navigate(from, { replace: true })
+    }
+  }, [isAuthenticated, navigate, location])
 
   const handleLogin = async (values: LoginForm) => {
     setLoginLoading(true)
@@ -60,7 +69,10 @@ const LoginPage: React.FC = () => {
           updatedAt: ''
         }, token)
         message.success('登录成功！')
-        navigate('/')
+
+        // 跳转到原来要访问的页面，或者首页
+        const from = (location.state as any)?.from?.pathname || '/'
+        navigate(from, { replace: true })
       } else {
         message.error(response.data.message)
       }

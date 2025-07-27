@@ -1,5 +1,4 @@
 import { characterAPI } from '@/services/api'
-import { useAuthStore } from '@/stores/authStore'
 import type { Attributes, Character } from '@/types'
 import {
   DeleteOutlined,
@@ -35,7 +34,6 @@ const { Step } = Steps
 
 const CharacterPage: React.FC = () => {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
   const [currentStep, setCurrentStep] = useState(0)
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading] = useState(false)
@@ -59,12 +57,9 @@ const CharacterPage: React.FC = () => {
   })
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login')
-      return
-    }
+    // 页面加载时获取角色列表
     loadCharacters()
-  }, [isAuthenticated])
+  }, [])
 
   const loadCharacters = async () => {
     setLoading(true)
