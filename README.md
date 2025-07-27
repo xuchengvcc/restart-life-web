@@ -1,94 +1,69 @@
-# 重启人生 (Restart Life)
+# 重启人生 - 前端项目 (Restart Life Frontend)
 
 <div align="center">
   <h2>🎮 一款让你体验无限人生可能的文字模拟游戏</h2>
-  <p>在不同的时代背景下，体验从1800年到2050年间任意年份的人生轨迹</p>
+  <p>基于 React + TypeScript + Vite + Ant Design 构建的现代化前端应用</p>
 </div>
 
 ## 📖 项目简介
 
-重启人生是一款文字冒险、人生模拟、策略决策游戏。玩家可以选择出生的国家和年代，通过随机生成和主动选择相结合的方式，体验完整的人生历程。游戏结合历史事件和时代背景，让每一个人生都独一无二。
+重启人生前端是一款文字冒险、人生模拟、策略决策游戏的Web客户端。玩家可以选择出生的国家和年代，通过随机生成和主动选择相结合的方式，体验完整的人生历程。
 
 ### 🎯 核心特色
 
 - 🌍 **全球视野**：支持全球200+国家和地区选择
-- ⏰ **时代穿越**：体验1800-2050年间任意年份的时代背景
+- ⏰ **时代穿越**：体验不同年代的时代背景
 - 🎲 **随机人生**：智能生成合理的人生事件和发展轨迹
 - 🤔 **策略决策**：在关键人生节点做出重要选择
 - 📊 **深度模拟**：完整的属性、关系、经济、健康系统
 - 🏆 **成就系统**：记录和展示独特的人生成就
 
-## 🎮 游戏机制
-
-### 角色创建
-- **国家选择**：全球任意国家，包括特殊地区
-- **时代选择**：1800-2050年间任意年份
-- **随机属性**：性别、人种、家庭背景、个人属性等
-- **属性系统**：智力、体质、魅力、意志力、创造力等多维属性
-
-### 人生推进
-- **推进模式**：
-  - 🔥 激进模式：高风险高回报，极端事件概率增加
-  - ⚖️ 稳定模式：正常概率分布，平稳发展
-  - 🛡️ 保守模式：降低风险，减少意外事件
-- **年度事件**：基于属性、关系、时代背景生成合理事件
-- **重大选择**：教育、职业、婚恋、投资等人生关键决策
-
-### 系统特色
-- **关系网络**：家庭、社会、专业关系的动态管理
-- **成就追踪**：职业、家庭、社会、个人成就记录
-- **时代融合**：历史事件和社会环境对个人发展的影响
-
 ## 🛠 技术栈
 
-- **前端框架**：React/Next.js
-- **状态管理**：Redux/Zustand
-- **UI组件**：自定义组件库
-- **样式方案**：CSS Modules/Styled Components
-- **类型检查**：TypeScript
-- **构建工具**：Vite/Webpack
+- **前端框架**：React 18.2.0
+- **构建工具**：Vite 4.4.0
+- **UI组件库**：Ant Design 5.12.0
+- **状态管理**：Zustand 4.4.0
+- **路由管理**：React Router DOM 6.8.0
+- **HTTP客户端**：Axios 1.6.0
+- **类型检查**：TypeScript 5.0.0
+- **样式方案**：Less + CSS Modules
+- **图标库**：@ant-design/icons 5.2.0
+- **日期处理**：Day.js 1.11.0
+- **代码规范**：ESLint + TypeScript ESLint
 
 ## 📁 项目结构
 
 ```
-restart_life_web/
+.frontend/
 ├── src/                          # 源代码目录
-│   ├── api/                      # API接口层
-│   │   ├── common/              # 通用API
-│   │   ├── game/                # 游戏逻辑API
-│   │   └── ui/                  # UI相关API
-│   ├── assets/                   # 静态资源
-│   │   ├── common/              # 通用资源
-│   │   ├── game/                # 游戏资源
-│   │   └── ui/                  # UI资源
 │   ├── components/               # React组件
-│   │   ├── common/              # 通用组件
-│   │   ├── game/                # 游戏组件
-│   │   └── ui/                  # UI组件
-│   ├── hooks/                    # 自定义Hooks
-│   │   ├── common/              # 通用Hooks
-│   │   ├── game/                # 游戏Hooks
-│   │   └── ui/                  # UI Hooks
+│   │   └── Navigation.tsx        # 导航组件
 │   ├── pages/                    # 页面组件
-│   │   ├── common/              # 通用页面
-│   │   ├── game/                # 游戏页面
-│   │   └── ui/                  # UI页面
-│   ├── store/                    # 状态管理
-│   │   ├── common/              # 通用状态
-│   │   ├── game/                # 游戏状态
-│   │   └── ui/                  # UI状态
+│   │   ├── HomePage.tsx          # 首页
+│   │   ├── LoginPage.tsx         # 登录页
+│   │   ├── CharacterPage.tsx     # 角色管理页
+│   │   ├── GamePage.tsx          # 游戏页面
+│   │   └── ProfilePage.tsx       # 个人中心
+│   ├── services/                 # API服务层
+│   │   └── api.ts                # API接口定义
+│   ├── stores/                   # 状态管理
+│   │   └── authStore.ts          # 认证状态
 │   ├── types/                    # TypeScript类型定义
-│   │   ├── common/              # 通用类型
-│   │   ├── game/                # 游戏类型
-│   │   └── ui/                  # UI类型
-│   └── utils/                    # 工具函数
-│       ├── common/              # 通用工具
-│       ├── game/                # 游戏工具
-│       └── ui/                  # UI工具
+│   │   └── index.ts              # 全局类型
+│   ├── utils/                    # 工具函数
+│   ├── App.tsx                   # 根组件
+│   ├── main.tsx                  # 应用入口
+│   └── index.css                 # 全局样式
+├── public/                       # 静态资源
+├── dist/                         # 构建输出 (ignored)
+├── node_modules/                 # 依赖包 (ignored)
+├── docs/                         # 文档
 ├── prdtd/                        # 产品需求文档
-│   └── PRD.md                   # 详细产品需求
 ├── regulations/                  # 开发规范
-│   └── regulation.md            # 开发规范文档
+├── package.json                  # 依赖配置
+├── vite.config.ts                # Vite配置
+├── tsconfig.json                 # TypeScript配置
 └── README.md                     # 项目说明文档
 ```
 
@@ -96,7 +71,7 @@ restart_life_web/
 
 ### 环境要求
 
-- Node.js >= 16.0.0
+- Node.js >= 18.0.0
 - npm >= 8.0.0 或 yarn >= 1.22.0
 
 ### 安装步骤
@@ -104,7 +79,7 @@ restart_life_web/
 1. **克隆项目**
    ```bash
    git clone [项目地址]
-   cd restart_life_web
+   cd restart-life-api/.frontend
    ```
 
 2. **安装依赖**
@@ -116,6 +91,7 @@ restart_life_web/
 
 3. **启动开发服务器**
    ```bash
+   # 开发模式（自动允许外网访问）
    npm run dev
    # 或
    yarn dev
@@ -128,9 +104,38 @@ restart_life_web/
    yarn build
    ```
 
+5. **预览生产构建**
+   ```bash
+   npm run preview
+   # 或
+   yarn preview
+   ```
+
 ### 开发环境
 
-访问 `http://localhost:3000` 开始体验游戏。
+- **本地访问**：`http://localhost:8080`
+- **网络访问**：`http://[服务器IP]:8080`（如：`http://43.136.39.202:8080`）
+- **生产环境**：`https://asecondchance.cn`
+
+⚠️ **注意**：
+- 开发服务器默认配置为允许外网访问（`host: '0.0.0.0'`）
+- 确保防火墙允许8080端口通行
+- API请求会自动代理到后端服务（localhost:8081）
+
+### 可用脚本
+
+```bash
+# 开发服务器
+npm run dev          # 启动开发服务器
+
+# 构建相关
+npm run build        # 构建生产版本
+npm run preview      # 预览生产构建
+
+# 代码质量
+npm run lint         # ESLint代码检查
+npm run type-check   # TypeScript类型检查
+```
 
 ## 🎯 功能模块
 
@@ -209,4 +214,4 @@ restart_life_web/
 <div align="center">
   <p>🎮 开始你的重启人生之旅吧！</p>
   <p>在这里，每一个选择都很重要，每一段人生都独一无二。</p>
-</div> 
+</div>
