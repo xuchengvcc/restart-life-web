@@ -59,6 +59,26 @@ export const authAPI = {
     api.post<ApiResponse<{ token: string }>>('/auth/refresh', {
       refresh_token: refreshToken,
     }),
+
+  // 发送验证码
+  sendVerificationCode: (email: string) =>
+    api.post<ApiResponse>('/auth/send-verification-code', {
+      email,
+    }),
+
+  // 验证验证码
+  verifyCode: (email: string, code: string) =>
+    api.post<ApiResponse<{ reset_token: string }>>('/auth/verify-code', {
+      email,
+      code,
+    }),
+
+  // 重置密码
+  resetPassword: (resetToken: string, newPassword: string) =>
+    api.post<ApiResponse>('/auth/reset-password', {
+      reset_token: resetToken,
+      new_password: newPassword,
+    }),
 }
 
 // 角色相关API
