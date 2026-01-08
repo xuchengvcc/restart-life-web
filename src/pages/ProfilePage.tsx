@@ -23,6 +23,7 @@ import {
   Progress,
   Row,
   Space,
+  Spin,
   Statistic,
   Table,
   Tag,
@@ -35,26 +36,39 @@ const { Title, Text } = Typography
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate()
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { user, logout, isAuthenticated, isInitialized } = useAuthStore()
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading] = useState(false)
   const [editModalVisible, setEditModalVisible] = useState(false)
   const [form] = Form.useForm()
 
   useEffect(() => {
+    // 等待状态初始化完成
+    if (!isInitialized) return
+
+    // 检查认证状态
     if (!isAuthenticated) {
+      console.log('ProfilePage: 未认证，跳转到登录页')
       navigate('/login')
       return
     }
+
+    console.log('ProfilePage: 已认证，加载用户数据')
     loadUserData()
-  }, [isAuthenticated])
+  }, [isAuthenticated, isInitialized, navigate])
 
   const loadUserData = async () => {
     setLoading(true)
     try {
       const response = await characterAPI.getByUser()
       if (response.data.success) {
-        setCharacters(response.data.data || [])
+        // 处理后端返回的数据结构：{ characters: [...], total: number }
+        const responseData = response.data.data
+        if (responseData && responseData.characters) {
+          setCharacters(responseData.characters)
+        } else {
+          setCharacters([])
+        }
       }
     } catch (error) {
       console.error('加载用户数据失败:', error)
@@ -192,6 +206,15 @@ const ProfilePage: React.FC = () => {
     }
   ]
 
+  // 等待状态初始化完成
+  if (!isInitialized) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Spin size="large" tip="正在加载..." />
+      </div>
+    )
+  }
+
   if (!user) {
     return (
       <div className="p-6">
@@ -208,133 +231,119 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <Row gutter={[24, 24]}>
-        {/* 用户信息卡片 */}
-        <Col xs={24} lg={8}>
-          <Card className="text-center">
-            <Avatar size={80} icon={<UserOutlined />} className="mb-4" />
-            <Title level={4}>{user.username}</Title>
-            <Text type="secondary" className="block mb-4">{user.email}</Text>
+    <div className="pl-4 pr-6 py-6">
+      <Title level={2}>个人中心</Title>
 
-            <Space direction="vertical" className="w-full" size="middle">
-              <Button
-                icon={<EditOutlined />}
-                onClick={handleEditProfile}
-                className="w-full"
-              >
-                编辑资料
-              </Button>
-
-              <Button
-                icon={<SettingOutlined />}
-                className="w-full"
-              >
-                设置
-              </Button>
-
-              <Button
-                danger
-                icon={<LogoutOutlined />}
-                onClick={handleLogout}
-                className="w-full"
-              >
-                退出登录
-              </Button>
-            </Space>
-          </Card>
-
-          {/* 游戏统计 */}
-          <Card title="游戏统计" className="mt-6">
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Statistic
-                  title="角色数量"
-                  value={totalCharacters}
-                  prefix={<UserOutlined />}
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="完成数量"
-                  value={completedCharacters}
-                  prefix={<TrophyOutlined />}
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="总游戏时间"
-                  value={totalPlaytime}
-                  suffix="年"
-                  prefix={<ClockCircleOutlined />}
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="平均年龄"
-                  value={averageAge}
-                  suffix="岁"
-                  prefix={<ControlOutlined />}
-                />
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-
-        {/* 主要内容区域 */}
-        <Col xs={24} lg={16}>
-          {/* 成就系统 */}
-          <Card title="成就系统" className="mb-6">
-            <div className="mb-4">
-              <Text>成就进度: {unlockedAchievements.length}/{achievements.length}</Text>
-              <Progress
-                percent={achievementProgress}
-                className="mt-2"
-                strokeColor={{
-                  '0%': '#108ee9',
-                  '100%': '#87d068',
-                }}
-              />
+      {/* 用户信息 */}
+      <Card title="个人信息" className="mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Avatar size={80} icon={<UserOutlined />} />
+            <div>
+              <Title level={4} className="mb-1">{user.username}</Title>
+              <Text type="secondary">{user.email}</Text>
             </div>
+          </div>
+          <Space>
+            <Button icon={<EditOutlined />} onClick={handleEditProfile}>
+              编辑资料
+            </Button>
+            <Button icon={<SettingOutlined />}>
+              设置
+            </Button>
+            <Button danger icon={<LogoutOutlined />} onClick={handleLogout}>
+              退出登录
+            </Button>
+          </Space>
+        </div>
+      </Card>
 
-            <Row gutter={[16, 16]}>
-              {achievements.map(achievement => (
-                <Col xs={24} sm={12} lg={8} key={achievement.id}>
-                  <Card
-                    size="small"
-                    className={achievement.unlocked ? 'bg-green-50' : 'bg-gray-50'}
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">{achievement.icon}</div>
-                      <Text strong className={achievement.unlocked ? 'text-green-600' : 'text-gray-400'}>
-                        {achievement.name}
-                      </Text>
-                      <div className="text-sm text-gray-500 mt-1">
-                        {achievement.description}
-                      </div>
-                      {achievement.unlocked && (
-                        <Tag color="green" className="mt-2">已解锁</Tag>
-                      )}
-                    </div>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </Card>
-
-          {/* 角色列表 */}
-          <Card title="我的角色">
-            <Table
-              dataSource={characters}
-              columns={characterColumns}
-              rowKey="character_id"
-              pagination={{ pageSize: 5 }}
-              loading={loading}
-              locale={{ emptyText: '还没有创建角色，快去创建你的第一个角色吧！' }}
+      {/* 游戏统计 */}
+      <Card title="游戏统计" className="mb-6">
+        <Row gutter={[24, 16]}>
+          <Col xs={12} sm={6}>
+            <Statistic
+              title="角色数量"
+              value={totalCharacters}
+              prefix={<UserOutlined />}
             />
-          </Card>
-        </Col>
-      </Row>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Statistic
+              title="完成数量"
+              value={completedCharacters}
+              prefix={<TrophyOutlined />}
+            />
+          </Col>
+          <Col xs={12} sm={6}>
+            <Statistic
+              title="总游戏时间"
+              value={totalPlaytime}
+              suffix="年"
+              prefix={<ClockCircleOutlined />}
+            />
+          </Col>
+          <Col xs={12} sm={6}>
+            <Statistic
+              title="平均年龄"
+              value={averageAge}
+              suffix="岁"
+              prefix={<ControlOutlined />}
+            />
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 成就系统 */}
+      <Card title="成就系统" className="mb-6">
+        <div className="mb-4">
+          <Text>成就进度: {unlockedAchievements.length}/{achievements.length}</Text>
+          <Progress
+            percent={achievementProgress}
+            className="mt-2"
+            strokeColor={{
+              '0%': '#108ee9',
+              '100%': '#87d068',
+            }}
+          />
+        </div>
+
+        <Row gutter={[16, 16]}>
+          {achievements.map(achievement => (
+            <Col xs={24} sm={12} md={8} lg={6} key={achievement.id}>
+              <Card
+                size="small"
+                className={achievement.unlocked ? 'bg-green-50' : 'bg-gray-50'}
+              >
+                <div className="text-center">
+                  <div className="text-2xl mb-2">{achievement.icon}</div>
+                  <Text strong className={achievement.unlocked ? 'text-green-600' : 'text-gray-400'}>
+                    {achievement.name}
+                  </Text>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {achievement.description}
+                  </div>
+                  {achievement.unlocked && (
+                    <Tag color="green" className="mt-2">已解锁</Tag>
+                  )}
+                </div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Card>
+
+      {/* 我的角色 */}
+      <Card title="我的角色">
+        <Table
+          dataSource={characters}
+          columns={characterColumns}
+          rowKey="character_id"
+          pagination={{ pageSize: 10 }}
+          loading={loading}
+          locale={{ emptyText: '还没有创建角色，快去创建你的第一个角色吧！' }}
+        />
+      </Card>
 
       {/* 编辑个人信息弹窗 */}
       <Modal

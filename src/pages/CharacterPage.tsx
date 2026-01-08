@@ -1,4 +1,4 @@
-import { characterAPI } from '@/services/api'
+import { characterAPI, publicAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import type { Attributes, Character } from '@/types'
 import {
@@ -35,9 +35,10 @@ const { Step } = Steps
 
 const CharacterPage: React.FC = () => {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isInitialized } = useAuthStore()
   const [currentStep, setCurrentStep] = useState(0)
   const [characters, setCharacters] = useState<Character[]>([])
+  const [countries, setCountries] = useState<Array<{ code: string; name: string; name_cn: string }>>([])
   const [loading, setLoading] = useState(false)
   const [creating, setCreating] = useState(false)
   const [form] = Form.useForm()
@@ -59,19 +60,47 @@ const CharacterPage: React.FC = () => {
   })
 
   useEffect(() => {
+    // 等待状态初始化完成
+    if (!isInitialized) return
+
+    // 检查认证状态
     if (!isAuthenticated) {
+      console.log('CharacterPage: 未认证，跳转到登录页')
       navigate('/login')
       return
     }
+
+    console.log('CharacterPage: 已认证，加载角色数据')
     loadCharacters()
-  }, [isAuthenticated])
+    loadCountries() // 加载国家列表
+  }, [isAuthenticated, isInitialized, navigate])
+
+  const loadCountries = async () => {
+    try {
+      const response = await publicAPI.getCountries()
+      if (response.data.success && response.data.data) {
+        setCountries(response.data.data)
+      } else {
+        message.error('获取国家列表失败')
+      }
+    } catch (error) {
+      console.error('获取国家列表失败:', error)
+      message.error('获取国家列表失败')
+    }
+  }
 
   const loadCharacters = async () => {
     setLoading(true)
     try {
       const response = await characterAPI.getByUser()
       if (response.data.success) {
-        setCharacters(response.data.data || [])
+        // 处理后端返回的数据结构：{ characters: [...], total: number }
+        const responseData = response.data.data
+        if (responseData && responseData.characters) {
+          setCharacters(responseData.characters)
+        } else {
+          setCharacters([])
+        }
       }
     } catch (error) {
       console.error('加载角色列表失败:', error)
@@ -188,10 +217,11 @@ const CharacterPage: React.FC = () => {
   const totalAttributePoints = Object.values(characterData.attributes).reduce((sum, val) => sum + val, 0)
   const averageAttribute = Math.round(totalAttributePoints / 6)
 
-  const countries = [
-    '中国', '美国', '英国', '日本', '德国', '法国', '意大利', '加拿大',
-    '澳大利亚', '俄罗斯', '印度', '巴西', '墨西哥', '阿根廷', '南非'
-  ]
+  // 根据国家代码获取国家中文名称
+  const getCountryName = (countryCode: string) => {
+    const country = countries.find(c => c.code === countryCode)
+    return country ? country.name_cn : countryCode
+  }
 
   const characterColumns = [
     {
@@ -218,7 +248,7 @@ const CharacterPage: React.FC = () => {
     {
       title: '出生地',
       key: 'birth_info',
-      render: (record: Character) => `${record.birth_country} (${record.birth_year}年)`
+      render: (record: Character) => `${getCountryName(record.birth_country)} (${record.birth_year}年)`
     },
     {
       title: '游戏时长',
@@ -319,7 +349,9 @@ const CharacterPage: React.FC = () => {
               }
             >
               {countries.map(country => (
-                <Option key={country} value={country}>{country}</Option>
+                <Option key={country.code} value={country.code}>
+                  {country.name_cn} ({country.name})
+                </Option>
               ))}
             </Select>
           </Form.Item>
@@ -383,7 +415,7 @@ const CharacterPage: React.FC = () => {
           </Col>
           <Col span={24}>
             <Text strong>出生信息: </Text>
-            <Text>{characterData.birth_year}年生于{characterData.birth_country}{characterData.birth_place}</Text>
+            <Text>{characterData.birth_year}年生于{getCountryName(characterData.birth_country)}{characterData.birth_place}</Text>
           </Col>
           <Col span={24}>
             <Text strong>初始属性:</Text>
@@ -401,7 +433,16 @@ const CharacterPage: React.FC = () => {
     </div>
   )
 
-  if (loading) {
+  // 等待状态初始化完成
+  if (!isInitialized) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Spin size="large" tip="正在加载..." />
+      </div>
+    )
+  }
+
+  if (loading || !isInitialized) {
     return (
       <div className="flex justify-center items-center h-96">
         <Spin size="large" />
@@ -410,7 +451,7 @@ const CharacterPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="pl-4 pr-6 py-6">
       <Title level={2}>角色管理</Title>
 
       {/* 现有角色列表 */}

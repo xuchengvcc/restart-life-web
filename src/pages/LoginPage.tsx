@@ -46,19 +46,20 @@ const LoginPage: React.FC = () => {
   const [resetEmail, setResetEmail] = useState('')
   const [resetToken, setResetToken] = useState('')
 
+
   const handleLogin = async (values: LoginForm) => {
     setLoginLoading(true)
     try {
       const response = await authAPI.login(values.username, values.password)
       if (response.data.success) {
-        const { token } = response.data.data!
+        const { user, access_token } = response.data.data!
         login({
-          id: '1', // 这里应该从后端返回
-          username: values.username,
-          email: '',
-          createdAt: '',
-          updatedAt: ''
-        }, token)
+          id: user.user_id.toString(),
+          username: user.username,
+          email: user.email,
+          createdAt: user.created_at.toString(),
+          updatedAt: user.updated_at.toString()
+        }, access_token)
         message.success('登录成功！')
         navigate('/')
       } else {

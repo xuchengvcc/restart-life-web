@@ -186,7 +186,7 @@ const GamePage: React.FC = () => {
     const happinessPercentage = Math.round((attributes.happiness / 100) * 100)
 
     return (
-        <div className="p-6 max-w-7xl mx-auto">
+        <div className="pl-4 pr-6 py-6">
             <Row gutter={[24, 24]}>
                 {/* 左侧：角色信息和属性 */}
                 <Col xs={24} lg={8}>

@@ -1,9 +1,20 @@
-import type { ApiResponse, Character, GameDecision, GameEvent, GameProgressRequest, GameState } from '@/types'
+import type { ApiResponse, Character, CharacterListResponse, GameDecision, GameEvent, GameProgressRequest, GameState } from '@/types'
 import axios, { AxiosResponse } from 'axios'
+
+// 根据环境确定API基础URL
+const getApiBaseURL = () => {
+  // 在开发环境，通过Vite代理到本地后端
+  if (import.meta.env?.DEV) {
+    return '/api/v1'
+  }
+
+  // 在生产环境，使用相同域名的API路径
+  return '/api/v1'
+}
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: getApiBaseURL(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -41,7 +52,7 @@ api.interceptors.response.use(
 // 认证相关API
 export const authAPI = {
   login: (username: string, password: string) =>
-    api.post<ApiResponse<{ token: string; refresh_token: string }>>('/auth/login', {
+    api.post<ApiResponse<{ user: any; access_token: string; refresh_token: string; expires_at: number }>>('/auth/login', {
       username,
       password,
     }),
@@ -81,6 +92,12 @@ export const authAPI = {
     }),
 }
 
+// 公共数据API（不需要认证）
+export const publicAPI = {
+  getCountries: () =>
+    api.get<ApiResponse<Array<{ code: string; name: string; name_cn: string }>>>('/countries'),
+}
+
 // 角色相关API
 export const characterAPI = {
   create: (character: Partial<Character>) =>
@@ -90,7 +107,7 @@ export const characterAPI = {
     api.get<ApiResponse<Character>>(`/characters/get/${id}`),
 
   getByUser: () =>
-    api.get<ApiResponse<Character[]>>('/characters/list'),
+    api.get<ApiResponse<CharacterListResponse>>('/characters/list'),
 
   update: (id: string, character: Partial<Character>) =>
     api.put<ApiResponse<Character>>(`/characters/update/${id}`, character),

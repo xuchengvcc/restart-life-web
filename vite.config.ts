@@ -12,7 +12,7 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0', // 允许外部访问
-    port: 8080, // 使用标准Web端口
+    port: 8080, // 使用Vite默认端口
     allowedHosts: [
       'localhost',
       '127.0.0.1',
@@ -22,7 +22,7 @@ export default defineConfig({
     ], // 允许的主机名
     proxy: {
       '/api': {
-        target: 'http://localhost:8081', // 指向新的后端端口
+        target: 'http://localhost:8081', // 指向后端端口
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api/v1')
       }
