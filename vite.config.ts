@@ -54,7 +54,7 @@ export default defineConfig({
       'www.asecondchance.cn'
     ], // 允许的主机名
     proxy: {
-            '/api': {
+      '/api': {
         target: 'http://localhost:8081', // 本地开发时代理到后端接口（或 Docker 本地映射）
         changeOrigin: true,
         secure: false,
