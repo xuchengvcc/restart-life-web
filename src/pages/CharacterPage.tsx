@@ -60,19 +60,15 @@ const CharacterPage: React.FC = () => {
   })
 
   useEffect(() => {
-    // 等待状态初始化完成
     if (!isInitialized) return
 
-    // 检查认证状态
     if (!isAuthenticated) {
-      console.log('CharacterPage: 未认证，跳转到登录页')
       navigate('/login')
       return
     }
 
-    console.log('CharacterPage: 已认证，加载角色数据')
+    loadCountries()
     loadCharacters()
-    loadCountries() // 加载国家列表
   }, [isAuthenticated, isInitialized, navigate])
 
   const loadCountries = async () => {
@@ -94,10 +90,11 @@ const CharacterPage: React.FC = () => {
     try {
       const response = await characterAPI.getByUser()
       if (response.data.success) {
-        // 处理后端返回的数据结构：{ characters: [...], total: number }
         const responseData = response.data.data
-        if (responseData && responseData.characters) {
-          setCharacters(responseData.characters)
+        if (Array.isArray(responseData)) {
+          setCharacters(responseData)
+        } else if (responseData && 'characters' in responseData) {
+          setCharacters((responseData as { characters?: Character[] }).characters || [])
         } else {
           setCharacters([])
         }

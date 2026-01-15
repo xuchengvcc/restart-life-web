@@ -21,30 +21,43 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isInitialized: false,
       login: (user, token) => {
+        console.log('执行登录，设置状态:', { user: user.username, token: token.substring(0, 20) + '...' })
         localStorage.setItem('token', token)
         set({ user, token, isAuthenticated: true, isInitialized: true })
       },
       logout: () => {
+        console.log('执行登出，清理状态')
         localStorage.removeItem('token')
         set({ user: null, token: null, isAuthenticated: false, isInitialized: true })
       },
       setUser: (user) => set({ user }),
-      setInitialized: (initialized) => set({ isInitialized: initialized }),
+      setInitialized: (initialized) => set({ isInitialized: initialized })
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ user: state.user, token: state.token, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated
+      }),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // 简单检查：如果localStorage有token，就认为已登录
           const storedToken = localStorage.getItem('token')
-          if (storedToken) {
+
+          if (state.token || storedToken) {
             state.isAuthenticated = true
-            state.token = storedToken
+            if (!state.token && storedToken) {
+              state.token = storedToken
+            }
+          } else {
+            state.isAuthenticated = false
+            state.user = null
+            state.token = null
           }
-          state.setInitialized(true)
+
+          state.setInitialized?.(true)
         }
-      },
+      }
     }
   )
 )

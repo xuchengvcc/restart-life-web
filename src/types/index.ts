@@ -136,13 +136,6 @@ export interface Decision {
   updated_at: number
 }
 
-// API 响应
-// 角色列表响应
-export interface CharacterListResponse {
-  characters: Character[]
-  total: number
-}
-
 export interface ApiResponse<T = any> {
   success: boolean
   message: string

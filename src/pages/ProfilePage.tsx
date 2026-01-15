@@ -43,17 +43,13 @@ const ProfilePage: React.FC = () => {
   const [form] = Form.useForm()
 
   useEffect(() => {
-    // 等待状态初始化完成
     if (!isInitialized) return
 
-    // 检查认证状态
     if (!isAuthenticated) {
-      console.log('ProfilePage: 未认证，跳转到登录页')
       navigate('/login')
       return
     }
 
-    console.log('ProfilePage: 已认证，加载用户数据')
     loadUserData()
   }, [isAuthenticated, isInitialized, navigate])
 
@@ -62,10 +58,11 @@ const ProfilePage: React.FC = () => {
     try {
       const response = await characterAPI.getByUser()
       if (response.data.success) {
-        // 处理后端返回的数据结构：{ characters: [...], total: number }
-        const responseData = response.data.data
-        if (responseData && responseData.characters) {
-          setCharacters(responseData.characters)
+        const data = response.data.data
+        if (Array.isArray(data)) {
+          setCharacters(data)
+        } else if (data && 'characters' in data) {
+          setCharacters((data as { characters?: Character[] }).characters || [])
         } else {
           setCharacters([])
         }
@@ -101,7 +98,6 @@ const ProfilePage: React.FC = () => {
 
   const handleUpdateProfile = async () => {
     try {
-      // 这里应该调用更新用户信息的API
       message.success('个人信息更新成功')
       setEditModalVisible(false)
     } catch (error) {
@@ -109,7 +105,6 @@ const ProfilePage: React.FC = () => {
     }
   }
 
-  // 统计数据
   const totalCharacters = characters.length
   const completedCharacters = characters.filter(c => c.game_completed).length
   const totalPlaytime = characters.reduce((sum, c) => sum + c.total_playtime, 0)
@@ -117,7 +112,6 @@ const ProfilePage: React.FC = () => {
     ? Math.round(characters.reduce((sum, c) => sum + c.current_age, 0) / characters.length)
     : 0
 
-  // 成就系统（示例）
   const achievements = [
     {
       id: 1,
@@ -163,7 +157,7 @@ const ProfilePage: React.FC = () => {
     {
       title: '角色名',
       dataIndex: 'character_name',
-      key: 'character_name',
+      key: 'character_name'
     },
     {
       title: '年龄',
@@ -196,32 +190,28 @@ const ProfilePage: React.FC = () => {
       title: '操作',
       key: 'actions',
       render: (record: Character) => (
-        <Button
-          type="link"
-          onClick={() => navigate(`/game/${record.character_id}`)}
-        >
+        <Button type='link' onClick={() => navigate(`/game/${record.character_id}`)}>
           查看详情
         </Button>
       )
     }
   ]
 
-  // 等待状态初始化完成
   if (!isInitialized) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <Spin size="large" tip="正在加载..." />
+      <div className='flex justify-center items-center h-96'>
+        <Spin size='large' tip='正在加载...' />
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="p-6">
+      <div className='p-6' style={{ paddingTop: '24px' }}>
         <Card>
-          <div className="text-center">
+          <div className='text-center'>
             <Title level={3}>请先登录</Title>
-            <Button type="primary" onClick={() => navigate('/login')}>
+            <Button type='primary' onClick={() => navigate('/login')}>
               去登录
             </Button>
           </div>
@@ -231,101 +221,64 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="pl-4 pr-6 py-6">
-      <Title level={2}>个人中心</Title>
+    <div className='p-6 max-w-6xl mx-auto' style={{ paddingTop: '24px' }}>
+      <Row gutter={[24, 24]} className='mb-6'>
+        <Col xs={24} lg={8}>
+          <Card title='个人信息' className='text-center'>
+            <Avatar size={80} icon={<UserOutlined />} className='mb-4' />
+            <Title level={4}>{user.username}</Title>
+            <Text type='secondary' className='block mb-4'>
+              {user.email}
+            </Text>
+            <Space wrap>
+              <Button icon={<EditOutlined />} onClick={handleEditProfile}>
+                编辑资料
+              </Button>
+              <Button icon={<SettingOutlined />}>
+                设置
+              </Button>
+              <Button danger icon={<LogoutOutlined />} onClick={handleLogout}>
+                退出登录
+              </Button>
+            </Space>
+          </Card>
+        </Col>
+        <Col xs={24} lg={16}>
+          <Card title='游戏统计' className='h-full'>
+            <Row gutter={[24, 16]}>
+              <Col xs={12} sm={6}>
+                <Statistic title='角色数量' value={totalCharacters} prefix={<UserOutlined />} />
+              </Col>
+              <Col xs={12} sm={6}>
+                <Statistic title='完成数量' value={completedCharacters} prefix={<TrophyOutlined />} />
+              </Col>
+              <Col xs={12} sm={6}>
+                <Statistic title='总游戏时间' value={totalPlaytime} suffix='年' prefix={<ClockCircleOutlined />} />
+              </Col>
+              <Col xs={12} sm={6}>
+                <Statistic title='平均年龄' value={averageAge} suffix='岁' prefix={<ControlOutlined />} />
+              </Col>
+            </Row>
+          </Card>
+        </Col>
+      </Row>
 
-      {/* 用户信息 */}
-      <Card title="个人信息" className="mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Avatar size={80} icon={<UserOutlined />} />
-            <div>
-              <Title level={4} className="mb-1">{user.username}</Title>
-              <Text type="secondary">{user.email}</Text>
-            </div>
-          </div>
-          <Space>
-            <Button icon={<EditOutlined />} onClick={handleEditProfile}>
-              编辑资料
-            </Button>
-            <Button icon={<SettingOutlined />}>
-              设置
-            </Button>
-            <Button danger icon={<LogoutOutlined />} onClick={handleLogout}>
-              退出登录
-            </Button>
-          </Space>
-        </div>
-      </Card>
-
-      {/* 游戏统计 */}
-      <Card title="游戏统计" className="mb-6">
-        <Row gutter={[24, 16]}>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="角色数量"
-              value={totalCharacters}
-              prefix={<UserOutlined />}
-            />
-          </Col>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="完成数量"
-              value={completedCharacters}
-              prefix={<TrophyOutlined />}
-            />
-          </Col>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="总游戏时间"
-              value={totalPlaytime}
-              suffix="年"
-              prefix={<ClockCircleOutlined />}
-            />
-          </Col>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="平均年龄"
-              value={averageAge}
-              suffix="岁"
-              prefix={<ControlOutlined />}
-            />
-          </Col>
-        </Row>
-      </Card>
-
-      {/* 成就系统 */}
-      <Card title="成就系统" className="mb-6">
-        <div className="mb-4">
+      <Card title='成就系统' className='mb-6'>
+        <div className='mb-4'>
           <Text>成就进度: {unlockedAchievements.length}/{achievements.length}</Text>
-          <Progress
-            percent={achievementProgress}
-            className="mt-2"
-            strokeColor={{
-              '0%': '#108ee9',
-              '100%': '#87d068',
-            }}
-          />
+          <Progress percent={achievementProgress} className='mt-2' strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }} />
         </div>
-
         <Row gutter={[16, 16]}>
           {achievements.map(achievement => (
             <Col xs={24} sm={12} md={8} lg={6} key={achievement.id}>
-              <Card
-                size="small"
-                className={achievement.unlocked ? 'bg-green-50' : 'bg-gray-50'}
-              >
-                <div className="text-center">
-                  <div className="text-2xl mb-2">{achievement.icon}</div>
+              <Card size='small' className={achievement.unlocked ? 'bg-green-50' : 'bg-gray-50'}>
+                <div className='text-center'>
+                  <div className='text-2xl mb-2'>{achievement.icon}</div>
                   <Text strong className={achievement.unlocked ? 'text-green-600' : 'text-gray-400'}>
                     {achievement.name}
                   </Text>
-                  <div className="text-sm text-gray-500 mt-1">
-                    {achievement.description}
-                  </div>
-                  {achievement.unlocked && (
-                    <Tag color="green" className="mt-2">已解锁</Tag>
-                  )}
+                  <div className='text-sm text-gray-500 mt-1'>{achievement.description}</div>
+                  {achievement.unlocked && <Tag color='green' className='mt-2'>已解锁</Tag>}
                 </div>
               </Card>
             </Col>
@@ -333,43 +286,37 @@ const ProfilePage: React.FC = () => {
         </Row>
       </Card>
 
-      {/* 我的角色 */}
-      <Card title="我的角色">
+      <Card title='我的角色'>
         <Table
           dataSource={characters}
           columns={characterColumns}
-          rowKey="character_id"
-          pagination={{ pageSize: 10 }}
+          rowKey='character_id'
           loading={loading}
+          pagination={{ pageSize: 10 }}
           locale={{ emptyText: '还没有创建角色，快去创建你的第一个角色吧！' }}
         />
       </Card>
 
-      {/* 编辑个人信息弹窗 */}
       <Modal
-        title="编辑个人信息"
+        title='编辑个人信息'
         open={editModalVisible}
         onOk={() => form.submit()}
         onCancel={() => setEditModalVisible(false)}
-        okText="保存"
-        cancelText="取消"
+        okText='保存'
+        cancelText='取消'
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleUpdateProfile}
-        >
+        <Form form={form} layout='vertical' onFinish={handleUpdateProfile}>
           <Form.Item
-            label="用户名"
-            name="username"
+            label='用户名'
+            name='username'
             rules={[{ required: true, message: '请输入用户名' }]}
           >
             <Input prefix={<UserOutlined />} />
           </Form.Item>
 
           <Form.Item
-            label="邮箱"
-            name="email"
+            label='邮箱'
+            name='email'
             rules={[
               { required: true, message: '请输入邮箱' },
               { type: 'email', message: '请输入有效的邮箱地址' }

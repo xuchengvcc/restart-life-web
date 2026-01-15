@@ -10,6 +10,49 @@ body {
     'Segoe UI Emoji', 'Segoe UI Symbol';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* 添加用户选择兼容性 */
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* 修复高对比度模式警告 - 使用新的强制颜色模式 */
+@media (forced-colors: active) {
+  * {
+    forced-color-adjust: auto;
+  }
+}
+
+/* 抑制旧版Edge的高对比度模式警告 */
+@media screen and (-ms-high-contrast: active) {
+  /* 兼容旧版Edge，但现在已被弃用 */
+}
+
+/* 全局CSS兼容性增强 */
+* {
+  /* 添加webkit前缀支持Safari */
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* 禁用文本选择的元素 */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 按钮和交互元素的用户选择设置 */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .min-h-screen {

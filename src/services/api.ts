@@ -1,4 +1,4 @@
-import type { ApiResponse, Character, CharacterListResponse, GameDecision, GameEvent, GameProgressRequest, GameState } from '@/types'
+import type { ApiResponse, Character, GameDecision, GameEvent, GameProgressRequest, GameState } from '@/types'
 import axios, { AxiosResponse } from 'axios'
 
 // 根据环境确定API基础URL
@@ -107,7 +107,7 @@ export const characterAPI = {
     api.get<ApiResponse<Character>>(`/characters/get/${id}`),
 
   getByUser: () =>
-    api.get<ApiResponse<CharacterListResponse>>('/characters/list'),
+    api.get<ApiResponse<Character[]>>('/characters/list'),
 
   update: (id: string, character: Partial<Character>) =>
     api.put<ApiResponse<Character>>(`/characters/update/${id}`, character),
