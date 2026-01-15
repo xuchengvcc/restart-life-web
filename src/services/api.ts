@@ -144,7 +144,7 @@ export const gameAPI = {
     api.get<ApiResponse<GameState>>(`/game/state/${characterId}`),
 
   nextTurn: (characterId: string) =>
-    api.post<ApiResponse<GameEvent>>(`/game/next-turn/${characterId}`),
+    api.post<ApiResponse<GameEvent>>(`/game/advance/${characterId}`),
 
   makeDecision: (characterId: string, decision: GameDecision) =>
     api.post<ApiResponse<GameState>>(`/game/decision/${characterId}`, decision),
