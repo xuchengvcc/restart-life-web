@@ -117,10 +117,26 @@
 - **网络访问**：`http://[服务器IP]:8080`（如：`http://43.136.39.202:8080`）
 - **生产环境**：`https://asecondchance.cn`
 
-⚠️ **注意**：
-- 开发服务器默认配置为允许外网访问（`host: '0.0.0.0'`）
-- 确保防火墙允许8080端口通行
-- API请求会自动代理到后端服务（localhost:8081）
+- ⚠️ **注意**：
+- 开发服务器默认配置为允许外网访问（`host: '0.0.0.0'`），在开发机上使用时请添加防火墙规则以限制不必要的对外暴露。
+- 如果在非本机部署或容器中运行，确保宿主机已开放 `8080` 端口，且对应的 API 端口（默认 `8081`）也可达。
+- API 请求会被 Vite 代理转发到 `http://localhost:8081/api/v1`，因此在开发模式下后端服务需监听该地址并允许跨域。 Proxy 配置可在 [`vite.config.ts`](./vite.config.ts) 中查看。
+
+### Nginx & 生产部署说明
+- 生产镜像通过 [`Dockerfile.prod`](./Dockerfile.prod) 构建，内部将 Vite 的构建产物拷贝到 `/usr/share/nginx/html`，并使用 [`nginx/nginx.conf`](./nginx/nginx.conf) + [`nginx/default.conf`](./nginx/default.conf) 提供静态文件服务、缓存策略与反向代理。
+- 构建命令：`npm run docker:build` 会调用 `docker-compose build frontend-prod`，打包并输出 `frontend-prod` 镜像。运行命令 `npm run docker:prod` 会基于 production profile 启动 `frontend-prod` 服务，该服务依赖 `restart-network` 网络并将 HTTP/HTTPS 端口映射为 80/443。
+- `nginx/nginx.conf` 开启了 gzip、日志、缓存、keepalive 等优化，生产镜像中还会包含 `nginx/default.conf`。该文件实现：
+   1. **常规静态文件**：对 `.js/.css/.png/...` 设置 `expires 1y`，并添加 `Cache-Control: public, immutable`，适用于带 hash 的资源，前端构建时确保文件名为 content hash，避免缓存问题。
+   2. **API 反向代理**：以 `/api/` 开头的请求代理至 `http://restart-life-api:8080`，服务名应与后端容器在 `restart-network` 中的服务名一致，且保留原始 `Host`、真实 IP 与代理头。可在多阶段部署时通过修改 `default.conf` 指向其他主机。
+   3. **前端路由支持**：所有非静态资源会通过 `try_files $uri $uri/ /index.html` 回退到 SPA 主入口，确保刷新/深度链接可正常跳转。
+   4. **健康检查**：`/health` 路径简单返回 `healthy`，可用于负载均衡或容器编排就绪探针。
+   5. **安全头**：全局添加 `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection` 保护。Nginx 还可通过 `include` 引入额外头部。
+- HTTPS 部分提供示例配置，监听 `443 ssl http2`，并读取 `/etc/nginx/ssl/cert.pem` 与 `/etc/nginx/ssl/key.pem`。部署时请将你自己的证书（例如 Let’s Encrypt）手动挂载到该路径，或通过 Kubernetes Secret/卷映射传入。
+- 生产镜像默认挂载：
+   - `./nginx/nginx.conf` 到容器 `/etc/nginx/nginx.conf`
+   - `./nginx/default.conf` 到 `/etc/nginx/conf.d/default.conf`
+   - SSL 证书到 `/etc/nginx/ssl`（只在 HTTPS 需要时提供）
+- 推荐：在正式集群中前端容器与后端容器都加入 `restart-network` 网络，以保持 `/api/` 代理不需修改。如果后端服务在其他主机，请更新 `proxy_pass`。要关闭 HTTP，可在 `default.conf` 中注释 80 端口段并仅保留 443 部分。
 
 ### 可用脚本
 
@@ -135,6 +151,11 @@ npm run preview      # 预览生产构建
 # 代码质量
 npm run lint         # ESLint代码检查
 npm run type-check   # TypeScript类型检查
+
+# Docker 相关
+npm run docker:dev   # 通过 docker-compose 启动开发容器
+npm run docker:build # 构建生产镜像 frontend-prod
+npm run docker:prod  # 以 production profile 启动 nginx 前端容器
 ```
 
 ## 🎯 功能模块
