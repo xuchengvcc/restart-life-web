@@ -23,14 +23,17 @@ services:
       context: .
       dockerfile: Dockerfile.prod
     container_name: restart-life-frontend-prod
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
-      - "80:80"
-      - "443:443"
+      - "8082:80"
+      - "8444:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       # SSL证书挂载（生产环境）
-      - /etc/nginx/ssl:/etc/nginx/ssl:ro
+      - /etc/nginx/asecondchance.cn_bundle.crt:/etc/nginx/ssl/cert.pem:ro
+      - /etc/nginx/asecondchance.cn.key:/etc/nginx/ssl/key.pem:ro
     restart: unless-stopped
     profiles:
       - production
@@ -38,4 +41,4 @@ services:
 networks:
   default:
     external: true
-    name: restart-network
+    name: docker_restart-network

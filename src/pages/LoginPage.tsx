@@ -47,9 +47,10 @@ const LoginPage: React.FC = () => {
   const [resetEmail, setResetEmail] = useState('')
   const [resetToken, setResetToken] = useState('')
 
-  // 如果已经登录，重定向到主页
+  // 如果已登录且本地存有token，再跳转主页，避免状态残留导致 / 与 /login 来回跳
   useEffect(() => {
-    if (isAuthenticated) {
+    const storedToken = localStorage.getItem('token')
+    if (isAuthenticated && storedToken) {
       const from = (location.state as any)?.from?.pathname || '/'
       navigate(from, { replace: true })
     }

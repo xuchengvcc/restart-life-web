@@ -27,6 +27,8 @@ export interface Character {
   birth_year: number
   birth_country: string
   birth_place: string
+  gender: number
+  race: number
   current_age: number
   life_stage: string
   attributes: Attributes

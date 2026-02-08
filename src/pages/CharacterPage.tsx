@@ -49,6 +49,8 @@ const CharacterPage: React.FC = () => {
     birth_year: 2000,
     birth_country: '',
     birth_place: '',
+    gender: 0,
+    race: 0,
     attributes: {
       intelligence: 50,
       emotional_intelligence: 50,
@@ -115,6 +117,8 @@ const CharacterPage: React.FC = () => {
         birth_year: characterData.birth_year,
         birth_country: characterData.birth_country,
         birth_place: characterData.birth_place,
+        gender: characterData.gender,
+        race: characterData.race,
         current_age: 0,
         life_stage: 'infant',
         attributes: characterData.attributes,
@@ -135,6 +139,8 @@ const CharacterPage: React.FC = () => {
           birth_year: 2000,
           birth_country: '',
           birth_place: '',
+          gender: 0,
+          race: 0,
           attributes: {
             intelligence: 50,
             emotional_intelligence: 50,
@@ -364,6 +370,45 @@ const CharacterPage: React.FC = () => {
               value={characterData.birth_place}
               onChange={(e) => setCharacterData(prev => ({ ...prev, birth_place: e.target.value }))}
             />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="性别"
+            name="gender"
+            rules={[{ required: true, message: '请选择性别' }]}
+          >
+            <Select
+              placeholder="选择性别"
+              value={characterData.gender}
+              onChange={(value) => setCharacterData(prev => ({ ...prev, gender: value }))}
+            >
+              <Option value={0}>未知</Option>
+              <Option value={1}>男</Option>
+              <Option value={2}>女</Option>
+              <Option value={3}>其他</Option>
+            </Select>
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="种族"
+            name="race"
+            rules={[{ required: true, message: '请选择种族类型' }]}
+          >
+            <Select
+              placeholder="选择种族类型"
+              value={characterData.race}
+              onChange={(value) => setCharacterData(prev => ({ ...prev, race: value }))}
+            >
+              <Option value={0}>未知</Option>
+              <Option value={1}>白人</Option>
+              <Option value={2}>黄种人</Option>
+              <Option value={3}>黑人</Option>
+              <Option value={4}>拉丁裔</Option>
+              <Option value={5}>美洲原住民</Option>
+              <Option value={6}>混血</Option>
+            </Select>
           </Form.Item>
         </Col>
       </Row>
