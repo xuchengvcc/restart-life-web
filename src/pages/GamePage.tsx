@@ -48,6 +48,7 @@ const GamePage: React.FC = () => {
     const [currentEvent, setCurrentEvent] = useState<GameEvent | null>(null)
     const [decisionModalVisible, setDecisionModalVisible] = useState(false)
     const [selectedDecision, setSelectedDecision] = useState<string>('')
+    const [pendingDecision, setPendingDecision] = useState<any>(null)
     const [gameHistory, setGameHistory] = useState<GameEvent[]>([])
     const [isPlaying, setIsPlaying] = useState(false)
 
@@ -77,6 +78,15 @@ const GamePage: React.FC = () => {
                 if (historyResponse.data.success) {
                     setGameHistory(historyResponse.data.data || [])
                 }
+
+                // 如果有待决策，弹出决策框
+                if (state.pending_decision?.options) {
+                    setPendingDecision(state.pending_decision.options)
+                    setDecisionModalVisible(true)
+                } else {
+                    setPendingDecision(null)
+                    setDecisionModalVisible(false)
+                }
             }
         } catch (error) {
             console.error('加载游戏状态失败:', error)
@@ -86,21 +96,31 @@ const GamePage: React.FC = () => {
         }
     }
 
-    const handleNextTurn = async () => {
-        if (!characterId || !localGameState) return
+    const handleNextTurn = async (optionType?: string) => {
+        if (!characterId) return
 
         setLoading(true)
         try {
-            const response = await gameAPI.nextTurn(characterId)
+            const response = await gameAPI.nextTurn(characterId, optionType)
             if (response.data.success && response.data.data) {
-                const event = response.data.data
-                setCurrentEvent(event)
+                const state = response.data.data
+                setLocalGameState(state)
+                setStoreGameState(state)
 
-                if (event.requires_decision && event.decisions && event.decisions.length > 0) {
+                // 重新加载历史
+                const historyResponse = await gameAPI.getHistory(characterId)
+                if (historyResponse.data.success) {
+                    setGameHistory(historyResponse.data.data || [])
+                }
+
+                // 如果有待决策，弹出决策框
+                if (state.pending_decision?.options) {
+                    setPendingDecision(state.pending_decision.options)
                     setDecisionModalVisible(true)
                 } else {
-                    // 自动应用事件效果
-                    await applyEventEffects(event)
+                    setPendingDecision(null)
+                    setDecisionModalVisible(false)
+                    setSelectedDecision('')
                 }
             }
         } catch (error) {
@@ -112,28 +132,13 @@ const GamePage: React.FC = () => {
     }
 
     const handleMakeDecision = async () => {
-        if (!characterId || !currentEvent || !selectedDecision) return
+        if (!characterId || !selectedDecision) return
 
-        setLoading(true)
-        try {
-            const response = await gameAPI.makeDecision(characterId, {
-                event_id: currentEvent.event_id,
-                decision_id: selectedDecision
-            })
-
-            if (response.data.success) {
-                await applyEventEffects(currentEvent)
-                setDecisionModalVisible(false)
-                setSelectedDecision('')
-                setCurrentEvent(null)
-                message.success('决策已执行')
-            }
-        } catch (error) {
-            console.error('执行决策失败:', error)
-            message.error('执行决策失败')
-        } finally {
-            setLoading(false)
-        }
+        await handleNextTurn(selectedDecision)
+        setDecisionModalVisible(false)
+        setSelectedDecision('')
+        setCurrentEvent(null)
+        message.success('决策已执行')
     }
 
     const applyEventEffects = async (event: GameEvent) => {
@@ -328,27 +333,10 @@ const GamePage: React.FC = () => {
                         </div>
                     </Card>
 
-                    {/* 当前事件显示 */}
+                    {/* 当前事件显示（暂保留，仅当后端返回事件时展示） */}
                     {currentEvent && (
                         <Card title="当前事件" className="mb-6">
                             <Paragraph>{currentEvent.description}</Paragraph>
-                            {currentEvent.requires_decision && currentEvent.decisions && (
-                                <div className="mt-4">
-                                    <Text strong>请选择你的决策：</Text>
-                                    <div className="mt-2">
-                                        {currentEvent.decisions?.map((decision: any, index: number) => (
-                                            <Button
-                                                key={index}
-                                                type={selectedDecision === decision.decision_id ? 'primary' : 'default'}
-                                                className="mb-2 mr-2"
-                                                onClick={() => setSelectedDecision(decision.decision_id)}
-                                            >
-                                                {decision.description}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
                         </Card>
                     )}
 
@@ -416,10 +404,8 @@ const GamePage: React.FC = () => {
                 cancelText="取消"
                 okButtonProps={{ disabled: !selectedDecision }}
             >
-                {currentEvent && (
+                {pendingDecision && (
                     <div>
-                        <Paragraph>{currentEvent.description}</Paragraph>
-                        <Divider />
                         <Text strong>请选择你的决策：</Text>
                         <Radio.Group
                             className="mt-3"
@@ -427,18 +413,36 @@ const GamePage: React.FC = () => {
                             onChange={(e) => setSelectedDecision(e.target.value)}
                         >
                             <Space direction="vertical" className="w-full">
-                                {currentEvent.decisions?.map((decision: any) => (
-                                    <Radio key={decision.decision_id} value={decision.decision_id}>
-                                        <div>
-                                            <div>{decision.description}</div>
-                                            {decision.effects && (
-                                                <div className="text-sm text-gray-500 mt-1">
-                                                    影响：{decision.effects}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </Radio>
-                                ))}
+                                <Radio value="conservative">
+                                    <div>
+                                        <div>{pendingDecision.conservative?.option_text}</div>
+                                        {pendingDecision.conservative?.consequence && (
+                                            <div className="text-sm text-gray-500 mt-1">
+                                                影响：{pendingDecision.conservative.consequence}
+                                            </div>
+                                        )}
+                                    </div>
+                                </Radio>
+                                <Radio value="moderate">
+                                    <div>
+                                        <div>{pendingDecision.moderate?.option_text}</div>
+                                        {pendingDecision.moderate?.consequence && (
+                                            <div className="text-sm text-gray-500 mt-1">
+                                                影响：{pendingDecision.moderate.consequence}
+                                            </div>
+                                        )}
+                                    </div>
+                                </Radio>
+                                <Radio value="aggressive">
+                                    <div>
+                                        <div>{pendingDecision.aggressive?.option_text}</div>
+                                        {pendingDecision.aggressive?.consequence && (
+                                            <div className="text-sm text-gray-500 mt-1">
+                                                影响：{pendingDecision.aggressive.consequence}
+                                            </div>
+                                        )}
+                                    </div>
+                                </Radio>
                             </Space>
                         </Radio.Group>
                     </div>

@@ -15,7 +15,7 @@ const getApiBaseURL = () => {
 // 创建axios实例
 const api = axios.create({
   baseURL: getApiBaseURL(),
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -142,14 +142,14 @@ export const gameAPI = {
     api.get<ApiResponse<GameState>>(`/game/load/${characterId}`),
 
   getHistory: (characterId: string) =>
-    api.get<ApiResponse<GameEvent[]>>(`/game/history/${characterId}`),
+    api.get<ApiResponse<GameEvent[]>>(`/game/events/${characterId}`),
 
   // 兼容旧的API调用
   getState: (characterId: string) =>
     api.get<ApiResponse<GameState>>(`/game/state/${characterId}`),
 
-  nextTurn: (characterId: string) =>
-    api.post<ApiResponse<GameEvent>>(`/game/advance/${characterId}`),
+  nextTurn: (characterId: string, optionType?: string) =>
+    api.post<ApiResponse<GameState>>(`/game/advance/${characterId}`, optionType ? { option_type: optionType } : {}),
 
   makeDecision: (characterId: string, decision: GameDecision) =>
     api.post<ApiResponse<GameState>>(`/game/decision/${characterId}`, decision),
