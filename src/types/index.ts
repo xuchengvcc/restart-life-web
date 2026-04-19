@@ -1,4 +1,16 @@
-// 用户相关类型
+export interface ApiError {
+  code: number
+  message: string
+  details?: string
+}
+
+export interface ApiResponse<T = unknown> {
+  success: boolean
+  data?: T
+  error?: ApiError
+  message?: string
+}
+
 export interface User {
   id: string
   username: string
@@ -7,7 +19,6 @@ export interface User {
   updatedAt: string
 }
 
-// 角色属性
 export interface Attributes {
   intelligence: number
   emotional_intelligence: number
@@ -15,18 +26,17 @@ export interface Attributes {
   imagination: number
   physical_fitness: number
   appearance: number
-  health: number
-  strength: number
-  happiness: number
+  health?: number
+  strength?: number
+  happiness?: number
 }
 
-// 角色信息
 export interface Character {
   character_id: string
   character_name: string
   birth_year: number
   birth_country: string
-  birth_place: string
+  birth_place?: string
   current_age: number
   life_stage: string
   attributes: Attributes
@@ -48,7 +58,34 @@ export interface Character {
   updated_at: string
 }
 
-// 游戏状态
+export interface Event {
+  event_id: number
+  character_id: string
+  age: number
+  description: string
+  impact: string
+  created_at: number
+}
+
+export interface DecisionDetails {
+  decision_type: number
+  option_text: string
+  consequence: string
+}
+
+export interface DecisionOptions {
+  conservative: DecisionDetails
+  moderate: DecisionDetails
+  aggressive: DecisionDetails
+}
+
+export interface PendingDecision {
+  character_id: string
+  options: DecisionOptions
+  created_at: number
+  updated_at: number
+}
+
 export interface GameState {
   character_id: string
   character_name: string
@@ -59,10 +96,8 @@ export interface GameState {
   game_completed: boolean
   last_save_time: number
   total_playtime: number
-  created_at: string
-  updated_at: string
-
-  // 角色详细状态
+  created_at: string | number
+  updated_at: string | number
   education: string
   career: string
   location: string
@@ -75,75 +110,75 @@ export interface GameState {
   personal_growth: string
   money: number
   last_year_description: string
-
-  // 出生信息
   birth_year: number
   birth_country: string
   birth_place: string
-
-  // 事件和决策
   key_events: Event[]
-  pending_decision?: Decision
+  pending_decision?: PendingDecision | null
 }
 
-// 事件
-export interface Event {
-  event_id: number
-  character_id: string
-  age: number
-  event_type: string
-  title: string
-  description: string
-  impact: string
-  created_at: number
-}
+export type DecisionOptionType = 'conservative' | 'moderate' | 'aggressive'
 
-// 游戏事件 (扩展版本)
-export interface GameEvent {
-  event_id: string
-  character_id: string
-  age: number
-  event_type: string
-  title: string
-  description: string
-  impact: string
-  requires_decision: boolean
-  decisions?: DecisionOption[]
-  created_at: number
-}
-
-// 决策选项
-export interface DecisionOption {
-  decision_id: string
-  option_id: string
-  title: string
-  description: string
-  effects?: string
-  potential_impact: string
-}
-
-// 游戏决策
-export interface GameDecision {
-  event_id: string
-  decision_id: string
-}
-
-// 决策
-export interface Decision {
-  character_id: string
-  options: DecisionOption[]
-  created_at: number
-  updated_at: number
-}
-
-// API 响应
-export interface ApiResponse<T = any> {
-  success: boolean
-  message: string
-  data?: T
-}
-
-// 游戏推进请求
 export interface GameProgressRequest {
-  option_type?: string
+  option_type?: DecisionOptionType
+}
+
+export interface GameDecision {
+  option_type: DecisionOptionType
+  decision_id?: string
+  event_id?: string
+}
+
+export interface AchievementItem {
+  id: string
+  title: string
+  description: string
+  category: string
+  unlocked: boolean
+  progress: number
+  max_progress: number
+  unlocked_at?: number
+}
+
+export interface AchievementCategory {
+  id: string
+  name: string
+  description: string
+  total_count: number
+  unlocked_count: number
+}
+
+export interface CharacterAchievementsResponse {
+  character_id: string
+  character_name: string
+  items: AchievementItem[]
+  unlocked_count: number
+  total_count: number
+}
+
+export interface CharacterStatsResponse {
+  character_id: string
+  character_name: string
+  current_age: number
+  life_stage: string
+  is_game_active: boolean
+  total_playtime: number
+  money: number
+  event_count: number
+  pending_decision: boolean
+  attributes: Attributes
+  last_event?: Event
+}
+
+export interface TimelineItem {
+  age: number
+  description: string
+  impact: string
+  created_at: number
+}
+
+export interface CharacterTimelineResponse {
+  character_id: string
+  timeline: TimelineItem[]
+  total: number
 }

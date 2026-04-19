@@ -1,7 +1,17 @@
-import type { ApiResponse, Character, GameDecision, GameEvent, GameProgressRequest, GameState } from '@/types'
+import type {
+  AchievementCategory,
+  ApiResponse,
+  Character,
+  CharacterAchievementsResponse,
+  CharacterStatsResponse,
+  CharacterTimelineResponse,
+  DecisionOptionType,
+  Event,
+  GameProgressRequest,
+  GameState,
+} from '@/types'
 import axios, { AxiosResponse } from 'axios'
 
-// 创建axios实例
 const api = axios.create({
   baseURL: '/api/v1',
   timeout: 10000,
@@ -10,7 +20,6 @@ const api = axios.create({
   },
 })
 
-// 请求拦截器
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -19,16 +28,11 @@ api.interceptors.request.use(
     }
     return config
   },
-  (error) => {
-    return Promise.reject(error)
-  }
+  (error) => Promise.reject(error)
 )
 
-// 响应拦截器
 api.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
-    return response
-  },
+  (response: AxiosResponse<ApiResponse>) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
@@ -38,7 +42,6 @@ api.interceptors.response.use(
   }
 )
 
-// 认证相关API
 export const authAPI = {
   login: (username: string, password: string) =>
     api.post<ApiResponse<{ token: string; refresh_token: string }>>('/auth/login', {
@@ -60,20 +63,12 @@ export const authAPI = {
       refresh_token: refreshToken,
     }),
 
-  // 发送验证码
   sendVerificationCode: (email: string) =>
-    api.post<ApiResponse>('/auth/send-verification-code', {
-      email,
-    }),
+    api.post<ApiResponse>('/auth/send-verification-code', { email }),
 
-  // 验证验证码
   verifyCode: (email: string, code: string) =>
-    api.post<ApiResponse<{ reset_token: string }>>('/auth/verify-code', {
-      email,
-      code,
-    }),
+    api.post<ApiResponse<{ reset_token: string }>>('/auth/verify-code', { email, code }),
 
-  // 重置密码
   resetPassword: (resetToken: string, newPassword: string) =>
     api.post<ApiResponse>('/auth/reset-password', {
       reset_token: resetToken,
@@ -81,56 +76,54 @@ export const authAPI = {
     }),
 }
 
-// 角色相关API
 export const characterAPI = {
   create: (character: Partial<Character>) =>
     api.post<ApiResponse<Character>>('/characters/create', character),
 
-  getById: (id: string) =>
-    api.get<ApiResponse<Character>>(`/characters/get/${id}`),
+  getById: (id: string) => api.get<ApiResponse<Character>>(`/characters/get/${id}`),
 
-  getByUser: () =>
-    api.get<ApiResponse<Character[]>>('/characters/list'),
+  getByUser: () => api.get<ApiResponse<Character[]>>('/characters/list'),
 
   update: (id: string, character: Partial<Character>) =>
     api.put<ApiResponse<Character>>(`/characters/update/${id}`, character),
 
-  delete: (id: string) =>
-    api.delete<ApiResponse>(`/characters/delete/${id}`),
+  delete: (id: string) => api.delete<ApiResponse>(`/characters/delete/${id}`),
 }
 
-// 游戏相关API
 export const gameAPI = {
-  startOrResume: () =>
-    api.post<ApiResponse<GameState>>('/game/start-or-resume'),
+  startOrResume: () => api.post<ApiResponse<GameState>>('/game/start-or-resume'),
 
-  startGame: (characterId: string) =>
-    api.post<ApiResponse<GameState>>(`/game/start/${characterId}`),
+  startGame: (characterId: string) => api.post<ApiResponse<GameState>>(`/game/start/${characterId}`),
 
   advanceGame: (characterId: string, request?: GameProgressRequest) =>
     api.post<ApiResponse<GameState>>(`/game/advance/${characterId}`, request || {}),
 
-  getGameState: (characterId: string) =>
-    api.get<ApiResponse<GameState>>(`/game/state/${characterId}`),
+  getGameState: (characterId: string) => api.get<ApiResponse<GameState>>(`/game/state/${characterId}`),
 
-  saveGame: (characterId: string) =>
-    api.post<ApiResponse>(`/game/save/${characterId}`),
+  saveGame: (characterId: string) => api.post<ApiResponse>(`/game/save/${characterId}`),
 
-  loadGame: (characterId: string) =>
-    api.get<ApiResponse<GameState>>(`/game/load/${characterId}`),
+  loadGame: (characterId: string) => api.post<ApiResponse<GameState>>(`/game/load/${characterId}`),
 
-  getHistory: (characterId: string) =>
-    api.get<ApiResponse<GameEvent[]>>(`/game/history/${characterId}`),
+  getHistory: (characterId: string) => api.get<ApiResponse<Event[]>>(`/game/events/${characterId}`),
 
-  // 兼容旧的API调用
-  getState: (characterId: string) =>
-    api.get<ApiResponse<GameState>>(`/game/state/${characterId}`),
+  getState: (characterId: string) => api.get<ApiResponse<GameState>>(`/game/state/${characterId}`),
 
-  nextTurn: (characterId: string) =>
-    api.post<ApiResponse<GameEvent>>(`/game/next-turn/${characterId}`),
+  nextTurn: (characterId: string) => api.post<ApiResponse<GameState>>(`/game/advance/${characterId}`, {}),
 
-  makeDecision: (characterId: string, decision: GameDecision) =>
-    api.post<ApiResponse<GameState>>(`/game/decision/${characterId}`, decision),
+  makeDecision: (characterId: string, optionType: DecisionOptionType) =>
+    api.post<ApiResponse<GameState>>(`/game/advance/${characterId}`, { option_type: optionType }),
+}
+
+export const achievementAPI = {
+  getCategories: () => api.get<ApiResponse<AchievementCategory[]>>('/achievements/categories'),
+  getByCharacter: (characterId: string) =>
+    api.get<ApiResponse<CharacterAchievementsResponse>>(`/achievements/${characterId}`),
+}
+
+export const statsAPI = {
+  getByCharacter: (characterId: string) => api.get<ApiResponse<CharacterStatsResponse>>(`/stats/${characterId}`),
+  getTimeline: (characterId: string) =>
+    api.get<ApiResponse<CharacterTimelineResponse>>(`/stats/${characterId}/timeline`),
 }
 
 export default api
