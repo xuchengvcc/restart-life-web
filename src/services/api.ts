@@ -36,15 +36,29 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
+      localStorage.removeItem('refresh_token')
       window.location.href = '/login'
     }
     return Promise.reject(error)
   }
 )
 
+type AuthPayload = {
+  user: {
+    user_id: number
+    username: string
+    email: string
+    created_at: number
+    updated_at: number
+  }
+  access_token: string
+  refresh_token: string
+  expires_at: number
+}
+
 export const authAPI = {
   login: (username: string, password: string) =>
-    api.post<ApiResponse<{ token: string; refresh_token: string }>>('/auth/login', {
+    api.post<ApiResponse<AuthPayload>>('/auth/login', {
       username,
       password,
     }),
@@ -59,7 +73,7 @@ export const authAPI = {
   logout: () => api.post<ApiResponse>('/auth/logout'),
 
   refreshToken: (refreshToken: string) =>
-    api.post<ApiResponse<{ token: string }>>('/auth/refresh', {
+    api.post<ApiResponse<AuthPayload>>('/auth/refresh', {
       refresh_token: refreshToken,
     }),
 
